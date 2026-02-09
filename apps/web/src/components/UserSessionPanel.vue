@@ -3,17 +3,17 @@ import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
-const selectedUserId = ref<string>(auth.currentUserId.value ?? '')
+const selectedUserId = ref<string>(auth.currentUserId ?? '')
 
 watch(
-  auth.currentUserId,
+  () => auth.currentUserId,
   (value) => {
     selectedUserId.value = value ?? ''
   },
 )
 
-const currentLabel = computed(() => auth.currentUser.value?.name ?? 'Signed out')
-const roleLabel = computed(() => auth.currentUser.value?.role ?? 'viewer')
+const currentLabel = computed(() => auth.currentUser?.name ?? 'Signed out')
+const roleLabel = computed(() => auth.currentUser?.role ?? 'viewer')
 
 const login = () => {
   if (selectedUserId.value) {

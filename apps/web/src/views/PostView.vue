@@ -25,7 +25,7 @@ const moderator = computed(() =>
   moderation.value?.actorId ? auth.getUserById(moderation.value.actorId) : null,
 )
 
-const canReply = computed(() => auth.canPost.value && !isRemoved.value)
+const canReply = computed(() => auth.canPost && !isRemoved.value)
 const disabledReplyMessage = computed(() => {
   if (isRemoved.value) {
     return 'Replies are disabled because the post was removed.'
@@ -72,7 +72,7 @@ const handleRemovePost = () => {
           “{{ moderation.reason }}”
         </p>
         <p v-if="moderator" class="post-view__removed-meta">
-          Action by {{ moderator.name }} · {{ formatDate(moderation.createdAt) }}
+          Action by {{ moderator.name }} · {{ formatDate(moderation?.createdAt ?? '') }}
         </p>
       </div>
       <div v-if="auth.canModerate" class="post-view__admin-toggle">

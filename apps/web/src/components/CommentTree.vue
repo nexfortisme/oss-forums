@@ -64,7 +64,7 @@ const forwardReply = (parentId: string, body: string) => {
       <p>This comment has been removed by an admin.</p>
       <p v-if="moderation?.reason" class="comment-item__removed-reason">“{{ moderation.reason }}”</p>
       <p v-if="moderator" class="comment-item__removed-meta">
-        Action by {{ moderator.name }} · {{ formatDate(moderation.createdAt) }}
+        Action by {{ moderator.name }} · {{ formatDate(moderation?.createdAt ?? '') }}
       </p>
     </div>
     <div class="comment-item__actions">

@@ -31,7 +31,7 @@ const seedUsers: User[] = [
 
 export const useAuthStore = defineStore('auth', () => {
   const users = ref<User[]>([...seedUsers])
-  const currentUserId = ref<string | null>(users.value[0]?.id ?? null)
+  const currentUserId = ref<string | null>(users.value[3]?.id ?? null)
 
   const currentUser = computed(() =>
     users.value.find((user) => user.id === currentUserId.value) ?? null,
