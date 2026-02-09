@@ -188,14 +188,14 @@ export const useForumStore = defineStore('forum', () => {
 
   const addPost = (channelId: string, body: string) => {
     const trimmed = body.trim()
-    if (!trimmed || !auth.canPost.value) return
+    if (!trimmed || !auth.canPost) return
 
     const newPost: Post = {
       id: createId('post'),
       channelId,
       title: deriveTitle(trimmed),
       body: trimmed,
-      author: auth.currentUser.value?.name ?? 'Guest',
+      author: auth.currentUser?.name ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
@@ -204,14 +204,14 @@ export const useForumStore = defineStore('forum', () => {
 
   const addComment = (postId: string, body: string, parentId?: string) => {
     const trimmed = body.trim()
-    if (!trimmed || !auth.canPost.value) return
+    if (!trimmed || !auth.canPost) return
 
     const newComment: Comment = {
       id: createId('comment'),
       postId,
       parentId,
       body: trimmed,
-      author: auth.currentUser.value?.name ?? 'Guest',
+      author: auth.currentUser?.name ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
@@ -225,7 +225,7 @@ export const useForumStore = defineStore('forum', () => {
     accent?: string
     guidelines?: string[]
   }) => {
-    if (!auth.isAdmin.value) return
+    if (!auth.isAdmin) return
 
     const name = payload.name.trim()
     const description = payload.description.trim()
@@ -255,7 +255,7 @@ export const useForumStore = defineStore('forum', () => {
   }
 
   const removePost = (postId: string, reason: string) => {
-    if (!auth.canModerate.value) return
+    if (!auth.canModerate) return
 
     const post = posts.value.find((item) => item.id === postId)
     if (!post) return
@@ -263,13 +263,13 @@ export const useForumStore = defineStore('forum', () => {
     post.moderation = {
       status: 'removed',
       reason: reason.trim() || 'Removed by admin.',
-      actorId: auth.currentUser.value?.id ?? 'system',
+      actorId: auth.currentUser?.id ?? 'system',
       createdAt: new Date().toISOString(),
     }
   }
 
   const removeComment = (commentId: string, reason: string) => {
-    if (!auth.canModerate.value) return
+    if (!auth.canModerate) return
 
     const comment = comments.value.find((item) => item.id === commentId)
     if (!comment) return
@@ -277,7 +277,7 @@ export const useForumStore = defineStore('forum', () => {
     comment.moderation = {
       status: 'removed',
       reason: reason.trim() || 'Removed by admin.',
-      actorId: auth.currentUser.value?.id ?? 'system',
+      actorId: auth.currentUser?.id ?? 'system',
       createdAt: new Date().toISOString(),
     }
   }
