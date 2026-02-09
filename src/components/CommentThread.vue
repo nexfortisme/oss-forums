@@ -7,6 +7,8 @@ import CommentTree, { type CommentNode } from './CommentTree.vue'
 type Props = {
   comments: Comment[]
   postId: string
+  canReply: boolean
+  canModerate: boolean
 }
 
 const props = defineProps<Props>()
@@ -43,13 +45,21 @@ const buildTree = (items: Comment[]): CommentNode[] => {
 const commentTree = computed(() => buildTree(props.comments))
 
 const handleReply = (parentId: string, body: string) => {
+  if (!props.canReply) return
   store.addComment(props.postId, body, parentId)
 }
 </script>
 
 <template>
   <div class="comment-thread">
-    <CommentTree v-for="node in commentTree" :key="node.id" :node="node" @reply="handleReply" />
+    <CommentTree
+      v-for="node in commentTree"
+      :key="node.id"
+      :node="node"
+      :can-reply="canReply"
+      :can-moderate="canModerate"
+      @reply="handleReply"
+    />
   </div>
 </template>
 

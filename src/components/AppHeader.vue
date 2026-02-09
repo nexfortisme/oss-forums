@@ -1,15 +1,20 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import UserSessionPanel from './UserSessionPanel.vue'
+</script>
 
 <template>
   <header class="app-header">
     <div class="app-header__inner">
-      <RouterLink to="/channels" class="brand">
-        <span class="brand__mark">◎</span>
-        <span class="brand__text">OSS Forums</span>
-      </RouterLink>
-      <nav class="app-header__nav">
-        <RouterLink to="/channels" class="nav-link">Channels</RouterLink>
-      </nav>
+      <div class="app-header__brand">
+        <RouterLink to="/channels" class="brand">
+          <span class="brand__mark">◎</span>
+          <span class="brand__text">OSS Forums</span>
+        </RouterLink>
+        <nav class="app-header__nav">
+          <RouterLink to="/channels" class="nav-link">Channels</RouterLink>
+        </nav>
+      </div>
+      <UserSessionPanel />
     </div>
   </header>
 </template>
@@ -32,6 +37,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -78,7 +90,7 @@
   color: #f8f6ee;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 960px) {
   .app-header__inner {
     flex-direction: column;
     align-items: flex-start;

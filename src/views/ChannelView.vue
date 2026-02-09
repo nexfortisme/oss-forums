@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
 import { useForumStore } from '../stores/forum'
 import NewPostForm from '../components/NewPostForm.vue'
 import PostList from '../components/PostList.vue'
 
 const props = defineProps<{ channelSlug: string }>()
 const store = useForumStore()
+const auth = useAuthStore()
 
 const channel = computed(() => store.getChannelBySlug(props.channelSlug))
 const posts = computed(() =>
@@ -52,7 +54,12 @@ const handlePostSubmit = (body: string) => {
 
     <div class="channel-view__grid">
       <div class="channel-view__main">
-        <NewPostForm :channel-name="channel.name" @submit="handlePostSubmit" />
+        <NewPostForm
+          :channel-name="channel.name"
+          :can-post="auth.canPost"
+          :user-label="auth.currentUser?.name || 'Guest'"
+          @submit="handlePostSubmit"
+        />
 
         <div class="channel-view__posts">
           <h2>Recent posts</h2>

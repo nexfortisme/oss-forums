@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-defineProps<{ channelName: string }>()
+const props = defineProps<{ channelName: string; canPost: boolean; userLabel: string }>()
 
 const emit = defineEmits<{ submit: [body: string] }>()
 
 const body = ref('')
 
 const submitPost = () => {
+  if (!props.canPost) return
   emit('submit', body.value)
   body.value = ''
 }
@@ -19,13 +20,19 @@ const submitPost = () => {
       <h3>Post in {{ channelName }}</h3>
       <span class="new-post__note">Drafting in plain text for now.</span>
     </div>
-    <textarea
-      v-model="body"
-      rows="6"
-      placeholder="Share an update, question, or announcement..."
-    ></textarea>
-    <div class="new-post__actions">
-      <button type="submit" :disabled="!body.trim()">Publish post</button>
+    <div v-if="canPost" class="new-post__composer">
+      <textarea
+        v-model="body"
+        rows="6"
+        placeholder="Share an update, question, or announcement..."
+      ></textarea>
+      <div class="new-post__actions">
+        <button type="submit" :disabled="!body.trim()">Publish post</button>
+      </div>
+    </div>
+    <div v-else class="new-post__locked">
+      <p>Signed in as {{ userLabel }}. Posting is limited to members and admins.</p>
+      <p>Switch to a member account to start a new thread.</p>
     </div>
   </form>
 </template>
@@ -52,6 +59,11 @@ const submitPost = () => {
   color: rgba(15, 23, 42, 0.6);
 }
 
+.new-post__composer {
+  display: grid;
+  gap: 1rem;
+}
+
 textarea {
   width: 100%;
   border-radius: 1rem;
@@ -70,6 +82,13 @@ textarea:focus {
 .new-post__actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.new-post__locked {
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  color: rgba(15, 23, 42, 0.7);
 }
 
 button {

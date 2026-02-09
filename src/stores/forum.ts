@@ -1,6 +1,8 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Channel, Comment, Post } from '../types/forum'
+import { slugify } from '../lib/slug'
+import { useAuthStore } from './auth'
 
 const seedChannels: Channel[] = [
   {
@@ -143,7 +145,19 @@ const deriveTitle = (body: string) => {
   return `${trimmed.slice(0, 60)}...`
 }
 
+const ensureUniqueSlug = (desired: string, existing: string[]) => {
+  if (!existing.includes(desired)) return desired
+  let suffix = 2
+  let next = `${desired}-${suffix}`
+  while (existing.includes(next)) {
+    suffix += 1
+    next = `${desired}-${suffix}`
+  }
+  return next
+}
+
 export const useForumStore = defineStore('forum', () => {
+  const auth = useAuthStore()
   const channels = ref<Channel[]>([...seedChannels])
   const posts = ref<Post[]>([...seedPosts])
   const comments = ref<Comment[]>([...seedComments])
@@ -156,9 +170,10 @@ export const useForumStore = defineStore('forum', () => {
   const getChannelById = (id: string) =>
     channels.value.find((channel) => channel.id === id)
 
-  const getPostsByChannelId = (channelId: string) =>
+  const getPostsByChannelId = (channelId: string, includeRemoved = false) =>
     posts.value
       .filter((post) => post.channelId === channelId)
+      .filter((post) => includeRemoved || !post.moderation)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
   const getPostById = (postId: string) => posts.value.find((post) => post.id === postId)
@@ -173,14 +188,14 @@ export const useForumStore = defineStore('forum', () => {
 
   const addPost = (channelId: string, body: string) => {
     const trimmed = body.trim()
-    if (!trimmed) return
+    if (!trimmed || !auth.canPost.value) return
 
     const newPost: Post = {
       id: createId('post'),
       channelId,
       title: deriveTitle(trimmed),
       body: trimmed,
-      author: 'You',
+      author: auth.currentUser.value?.name ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
@@ -189,18 +204,82 @@ export const useForumStore = defineStore('forum', () => {
 
   const addComment = (postId: string, body: string, parentId?: string) => {
     const trimmed = body.trim()
-    if (!trimmed) return
+    if (!trimmed || !auth.canPost.value) return
 
     const newComment: Comment = {
       id: createId('comment'),
       postId,
       parentId,
       body: trimmed,
-      author: 'You',
+      author: auth.currentUser.value?.name ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
     comments.value.push(newComment)
+  }
+
+  const addChannel = (payload: {
+    name: string
+    description: string
+    slug?: string
+    accent?: string
+    guidelines?: string[]
+  }) => {
+    if (!auth.isAdmin.value) return
+
+    const name = payload.name.trim()
+    const description = payload.description.trim()
+    if (!name || !description) return
+
+    const baseSlug = slugify(payload.slug?.trim() || name)
+    if (!baseSlug) return
+
+    const slug = ensureUniqueSlug(
+      baseSlug,
+      channels.value.map((channel) => channel.slug),
+    )
+
+    const newChannel: Channel = {
+      id: createId('channel'),
+      slug,
+      name,
+      description,
+      accent: payload.accent?.trim() || '#1d4ed8',
+      guidelines:
+        payload.guidelines && payload.guidelines.length
+          ? payload.guidelines
+          : ['Share the purpose of the channel in the first post.'],
+    }
+
+    channels.value.unshift(newChannel)
+  }
+
+  const removePost = (postId: string, reason: string) => {
+    if (!auth.canModerate.value) return
+
+    const post = posts.value.find((item) => item.id === postId)
+    if (!post) return
+
+    post.moderation = {
+      status: 'removed',
+      reason: reason.trim() || 'Removed by admin.',
+      actorId: auth.currentUser.value?.id ?? 'system',
+      createdAt: new Date().toISOString(),
+    }
+  }
+
+  const removeComment = (commentId: string, reason: string) => {
+    if (!auth.canModerate.value) return
+
+    const comment = comments.value.find((item) => item.id === commentId)
+    if (!comment) return
+
+    comment.moderation = {
+      status: 'removed',
+      reason: reason.trim() || 'Removed by admin.',
+      actorId: auth.currentUser.value?.id ?? 'system',
+      createdAt: new Date().toISOString(),
+    }
   }
 
   return {
@@ -216,5 +295,8 @@ export const useForumStore = defineStore('forum', () => {
     getCommentCountForPost,
     addPost,
     addComment,
+    addChannel,
+    removePost,
+    removeComment,
   }
 })

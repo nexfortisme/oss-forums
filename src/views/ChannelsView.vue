@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
 import { useForumStore } from '../stores/forum'
 import ChannelList from '../components/ChannelList.vue'
+import NewChannelForm from '../components/NewChannelForm.vue'
 
 const store = useForumStore()
+const auth = useAuthStore()
 const channels = computed(() => store.channels)
+
+const handleCreateChannel = (payload: {
+  name: string
+  description: string
+  slug?: string
+  accent?: string
+  guidelines?: string[]
+}) => {
+  store.addChannel(payload)
+}
 </script>
 
 <template>
@@ -34,6 +47,9 @@ const channels = computed(() => store.channels)
   </section>
 
   <section class="page-section">
+    <div v-if="auth.isAdmin" class="admin-panel">
+      <NewChannelForm @submit="handleCreateChannel" />
+    </div>
     <ChannelList :channels="channels" />
   </section>
 </template>
@@ -106,6 +122,14 @@ const channels = computed(() => store.channels)
 
 .page-section {
   margin-top: 2.5rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.admin-panel {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), transparent 60%);
+  padding: 1.2rem;
+  border-radius: 1.8rem;
 }
 
 @media (max-width: 960px) {

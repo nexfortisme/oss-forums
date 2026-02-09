@@ -7,6 +7,13 @@ export type Channel = {
   guidelines: string[]
 }
 
+export type ModerationAction = {
+  status: 'removed'
+  reason: string
+  actorId: string
+  createdAt: string
+}
+
 export type Post = {
   id: string
   channelId: string
@@ -14,6 +21,7 @@ export type Post = {
   body: string
   author: string
   createdAt: string
+  moderation?: ModerationAction
 }
 
 export type Comment = {
@@ -23,4 +31,5 @@ export type Comment = {
   body: string
   author: string
   createdAt: string
+  moderation?: ModerationAction
 }

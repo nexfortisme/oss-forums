@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = defineProps<{ placeholder?: string; submitLabel?: string; autofocus?: boolean }>()
+const props = defineProps<{
+  placeholder?: string
+  submitLabel?: string
+  autofocus?: boolean
+  disabled?: boolean
+  disabledMessage?: string
+}>()
 
 const emit = defineEmits<{ submit: [body: string] }>()
 
@@ -21,6 +27,7 @@ watch(
 )
 
 const submit = () => {
+  if (props.disabled) return
   emit('submit', body.value)
   body.value = ''
 }
@@ -33,12 +40,16 @@ const submit = () => {
       v-model="body"
       rows="4"
       :placeholder="placeholder || 'Write a comment...'"
+      :disabled="disabled"
     ></textarea>
     <div class="comment-composer__actions">
-      <button type="submit" :disabled="!body.trim()">
+      <button type="submit" :disabled="disabled || !body.trim()">
         {{ submitLabel || 'Post comment' }}
       </button>
     </div>
+    <p v-if="disabled" class="comment-composer__disabled">
+      {{ disabledMessage || 'Sign in with a member account to reply.' }}
+    </p>
   </form>
 </template>
 
@@ -63,6 +74,11 @@ textarea:focus {
   border-color: rgba(15, 23, 42, 0.4);
 }
 
+textarea:disabled {
+  background: rgba(15, 23, 42, 0.05);
+  cursor: not-allowed;
+}
+
 .comment-composer__actions {
   display: flex;
   justify-content: flex-end;
@@ -81,5 +97,11 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.comment-composer__disabled {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.55);
 }
 </style>
