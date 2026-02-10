@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import UserSessionPanel from './UserSessionPanel.vue'
+import { useAuthStore } from '../stores/auth'
+
+const auth = useAuthStore();
 </script>
 
 <template>
@@ -14,7 +17,7 @@ import UserSessionPanel from './UserSessionPanel.vue'
           <RouterLink to="/channels" class="nav-link">Channels</RouterLink>
         </nav>
       </div>
-      <UserSessionPanel />
+      <UserSessionPanel v-if="!auth.isExcludedDomain" />
     </div>
   </header>
 </template>

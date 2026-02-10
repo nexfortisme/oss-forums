@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import { useForumStore } from '../stores/forum'
-import { formatDate } from '../lib/format'
 import CommentComposer from '../components/CommentComposer.vue'
 import CommentThread from '../components/CommentThread.vue'
+import { formatDate } from '../lib/format'
+import { useAuthStore } from '../stores/auth'
+import { useForumStore } from '../stores/forum'
 
 const props = defineProps<{ channelSlug: string; postId: string }>()
 const store = useForumStore()
@@ -68,9 +68,7 @@ const handleRemovePost = () => {
       <p v-if="!isRemoved" class="post-view__body">{{ post.body }}</p>
       <div v-else class="post-view__removed">
         <p>This post has been removed by an admin.</p>
-        <p v-if="moderation?.reason" class="post-view__removed-reason">
-          “{{ moderation.reason }}”
-        </p>
+        <p v-if="moderation?.reason" class="post-view__removed-reason">“{{ moderation.reason }}”</p>
         <p v-if="moderator" class="post-view__removed-meta">
           Action by {{ moderator.username }} · {{ formatDate(moderation?.createdAt ?? '') }}
         </p>
@@ -93,35 +91,41 @@ const handleRemovePost = () => {
         placeholder="Share why the post was removed (required)."
       ></textarea>
       <div class="post-view__admin-actions">
-        <button type="button" :disabled="isRemoved || !removalReason.trim()" @click="handleRemovePost">
+        <button
+          type="button"
+          :disabled="isRemoved || !removalReason.trim()"
+          @click="handleRemovePost"
+        >
           Remove post
         </button>
       </div>
     </div>
 
     <div class="post-view__comments">
-      <div class="post-view__comments-header">
+      <div v-if="auth.isAuthenticated" class="post-view__comments-header">
         <h2>Threaded replies</h2>
         <span>{{ comments.length }} total</span>
       </div>
-      <div class="post-view__composer">
-      <CommentComposer
-        placeholder="Respond with context, links, or next steps..."
-        submit-label="Add reply"
-        :disabled="!canReply"
-        :disabled-message="disabledReplyMessage"
-        @submit="handleNewComment"
+      <div v-if="auth.isAuthenticated" class="post-view__composer">
+        <CommentComposer
+          placeholder="Respond with context, links, or next steps..."
+          submit-label="Add reply"
+          :disabled="!canReply"
+          :disabled-message="disabledReplyMessage"
+          @submit="handleNewComment"
+        />
+      </div>
+      <p v-if="!comments.length && auth.isAuthenticated" class="empty-state">
+        No replies yet. Be the first to respond.
+      </p>
+      <CommentThread
+        v-else
+        :comments="comments"
+        :post-id="post.id"
+        :can-reply="canReply"
+        :can-moderate="auth.canModerate"
       />
     </div>
-    <p v-if="!comments.length" class="empty-state">No replies yet. Be the first to respond.</p>
-    <CommentThread
-      v-else
-      :comments="comments"
-      :post-id="post.id"
-      :can-reply="canReply"
-      :can-moderate="auth.canModerate"
-    />
-  </div>
   </section>
 
   <section v-else class="empty-state">

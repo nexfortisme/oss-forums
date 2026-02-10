@@ -1,3 +1,4 @@
+import type { JwtTokenResponse } from '@shared/interfaces/jwt-token-response.interface'
 import type { User } from '@shared/interfaces/user.interface'
 import { Role } from '@shared/interfaces/user.interface'
 import { defineStore } from 'pinia'
@@ -5,21 +6,9 @@ import { computed, ref } from 'vue'
 
 type AuthStatus = 'idle' | 'loading' | 'error'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
-
-type MeResponse = {
-  iss?: string
-  exp?: number
-  user?:
-    | string
-    | {
-        id: string
-        username: string
-        display_name: string
-        role: string
-        created_at: string
-      }
-}
+const apiBaseUrl = import.meta.env.API_BASE_URL ?? 'http://localhost:3000'
+const excludedDomains =
+  import.meta.env.VITE_EXCLUDED_DOMAINS?.split(',').map((domain: string) => domain.trim()) ?? []
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<User | null>(null)
@@ -34,6 +23,10 @@ export const useAuthStore = defineStore('auth', () => {
   const canModerate = computed(() => role.value === Role.ADMIN)
 
   const isAuthenticated = computed(() => Boolean(currentUser.value))
+
+  const isExcludedDomain = computed(() => {
+    return excludedDomains.includes(window.location.hostname)
+  })
 
   const setSession = (userPayload: User) => {
     if (!userPayload) {
@@ -57,20 +50,25 @@ export const useAuthStore = defineStore('auth', () => {
         credentials: 'include',
       })
 
+      console.log('response', response)
+
       if (!response.ok) {
+        console.log('response not ok', response)
         currentUser.value = null
         return false
       }
 
-      const data = (await response.json()) as MeResponse
+      const data = (await response.json()) as JwtTokenResponse
 
       console.log('data', data)
 
-      setSession(JSON.parse(data.user as string) as User)
+      // This is some hoky bull shit. Fix this.
+      setSession(JSON.parse(data.user as unknown as string) as User)
       return Boolean(currentUser.value)
     } catch (err) {
+      console.log('error', err)
       currentUser.value = null
-      error.value = err instanceof Error ? err.message : 'Failed to load session.'
+      // error.value = err instanceof Error ? err.message : 'Failed to load session.'
       return false
     }
   }
@@ -80,6 +78,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      if (isExcludedDomain.value) {
+        setNullSession()
+        return false
+      }
+
       const response = await fetch(`${apiBaseUrl}/auth/login`, {
         method: 'POST',
         headers: {
@@ -114,6 +117,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      if (isExcludedDomain.value) {
+        setNullSession()
+        return false
+      }
+
       await fetch(`${apiBaseUrl}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
@@ -131,6 +139,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      if (isExcludedDomain.value) {
+        setNullSession()
+        return false
+      }
+
       const response = await fetch(`${apiBaseUrl}/auth/register`, {
         method: 'POST',
         headers: {
@@ -156,6 +169,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const getUserById = (userId: string): User => {
+    if (isExcludedDomain.value) {
+      setNullSession()
+      return null as unknown as User
+    }
+
     return {
       id: userId,
       username: 'John Doe',
@@ -176,6 +194,7 @@ export const useAuthStore = defineStore('auth', () => {
     canPost,
     canModerate,
     isAuthenticated,
+    isExcludedDomain,
     status,
     error,
     login,

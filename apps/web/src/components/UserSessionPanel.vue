@@ -19,19 +19,10 @@ const submitLogin = async () => {
   if (!form.username || !form.password) return
   const success = await auth.login(form.username, form.password)
   if (success) {
+    form.username = ''
     form.password = ''
   }
 }
-
-const disableLogin = computed(() => {
-  // Check if the site is on a specific domain, e.g. "restricted.example.com"
-  if (window.location.hostname === 'https://oss-forums.nexfortisme.workers.dev') {
-    auth.setNullSession()
-  }
-
-  // Disable login if busy, or if fields are empty
-  return isBusy.value || !form.username || !form.password
-})
 
 const goToRegister = () => {
   router.push({ name: 'register' })
@@ -55,24 +46,16 @@ const goToRegister = () => {
           type="text"
           placeholder="Username"
           autocomplete="username"
-          :disabled="disableLogin"
         />
         <input
           v-model="form.password"
           type="password"
           placeholder="Password"
           autocomplete="current-password"
-          :disabled="disableLogin"
+          @keyup.enter="submitLogin"
         />
-        <button type="button" :disabled="isBusy || disableLogin" @click="submitLogin">
-          Log in
-        </button>
-        <button
-          type="button"
-          class="ghost"
-          :disabled="isBusy || disableLogin"
-          @click="goToRegister"
-        >
+        <button type="button" :disabled="isBusy" @click="submitLogin">Log in</button>
+        <button type="button" class="ghost" :disabled="isBusy" @click="goToRegister">
           Register
         </button>
       </template>
