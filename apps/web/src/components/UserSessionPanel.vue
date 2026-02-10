@@ -23,6 +23,16 @@ const submitLogin = async () => {
   }
 }
 
+const disableLogin = computed(() => {
+  // Check if the site is on a specific domain, e.g. "restricted.example.com"
+  if (window.location.hostname === 'https://oss-forums.nexfortisme.workers.dev') {
+    auth.setNullSession()
+  }
+
+  // Disable login if busy, or if fields are empty
+  return isBusy.value || !form.username || !form.password
+})
+
 const goToRegister = () => {
   router.push({ name: 'register' })
 }
@@ -37,9 +47,7 @@ const goToRegister = () => {
     </div>
     <div class="session-panel__actions">
       <template v-if="auth.isAuthenticated">
-        <button type="button" class="ghost" :disabled="isBusy" @click="auth.logout">
-          Log out
-        </button>
+        <button type="button" class="ghost" :disabled="isBusy" @click="auth.logout">Log out</button>
       </template>
       <template v-else>
         <input
@@ -47,15 +55,24 @@ const goToRegister = () => {
           type="text"
           placeholder="Username"
           autocomplete="username"
+          :disabled="disableLogin"
         />
         <input
           v-model="form.password"
           type="password"
           placeholder="Password"
           autocomplete="current-password"
+          :disabled="disableLogin"
         />
-        <button type="button" :disabled="isBusy" @click="submitLogin">Log in</button>
-        <button type="button" class="ghost" :disabled="isBusy" @click="goToRegister">
+        <button type="button" :disabled="isBusy || disableLogin" @click="submitLogin">
+          Log in
+        </button>
+        <button
+          type="button"
+          class="ghost"
+          :disabled="isBusy || disableLogin"
+          @click="goToRegister"
+        >
           Register
         </button>
       </template>

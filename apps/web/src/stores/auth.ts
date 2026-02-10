@@ -164,6 +164,10 @@ export const useAuthStore = defineStore('auth', () => {
     } as User
   }
 
+  const setNullSession = () => {
+    setSession(null as unknown as User)
+  }
+
   return {
     currentUserId,
     currentUser,
@@ -179,5 +183,6 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     refreshSession,
     getUserById,
+    setNullSession,
   }
 })
