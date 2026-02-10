@@ -24,8 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(currentUser.value))
 
+  const demoMode = ref(false)
+
   const isExcludedDomain = computed(() => {
-    return excludedDomains.includes(window.location.hostname)
+    return excludedDomains.includes(window.location.hostname) || demoMode.value
   })
 
   const setSession = (userPayload: User) => {
@@ -69,6 +71,10 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('error', err)
       currentUser.value = null
       // error.value = err instanceof Error ? err.message : 'Failed to load session.'
+
+      // Assuming demo mode if there is an error loading the session
+      demoMode.value = true
+
       return false
     }
   }
