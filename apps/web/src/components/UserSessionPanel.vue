@@ -1,24 +1,30 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
-const selectedUserId = ref<string>(auth.currentUserId ?? '')
+const router = useRouter()
 
-watch(
-  () => auth.currentUserId,
-  (value) => {
-    selectedUserId.value = value ?? ''
-  },
-)
+const form = reactive({
+  username: '',
+  password: '',
+})
 
 const currentLabel = computed(() => auth.currentUser?.name ?? 'Signed out')
-const roleLabel = computed(() => auth.currentUser?.role ?? 'viewer')
+const roleLabel = computed(() => auth.currentUser?.role.toUpperCase() ?? 'Viewer')
+const isBusy = computed(() => auth.status === 'loading')
 
-const login = () => {
-  if (selectedUserId.value) {
-    auth.login(selectedUserId.value)
+const submitLogin = async () => {
+  if (!form.username || !form.password) return
+  const success = await auth.login(form.username, form.password)
+  if (success) {
+    form.password = ''
   }
+}
+
+const goToRegister = () => {
+  router.push({ name: 'register' })
 }
 </script>
 
@@ -30,16 +36,31 @@ const login = () => {
       <span class="session-panel__role">{{ roleLabel }}</span>
     </div>
     <div class="session-panel__actions">
-      <select v-model="selectedUserId">
-        <option disabled value="">Select a user</option>
-        <option v-for="user in auth.users" :key="user.id" :value="user.id">
-          {{ user.name }} · {{ user.role }}
-        </option>
-      </select>
-      <button type="button" @click="login">Log in</button>
-      <button type="button" class="ghost" @click="auth.logout">Log out</button>
+      <template v-if="auth.isAuthenticated">
+        <button type="button" class="ghost" :disabled="isBusy" @click="auth.logout">
+          Log out
+        </button>
+      </template>
+      <template v-else>
+        <input
+          v-model.trim="form.username"
+          type="text"
+          placeholder="Username"
+          autocomplete="username"
+        />
+        <input
+          v-model="form.password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        />
+        <button type="button" :disabled="isBusy" @click="submitLogin">Log in</button>
+        <button type="button" class="ghost" :disabled="isBusy" @click="goToRegister">
+          Register
+        </button>
+      </template>
     </div>
-    <p class="session-panel__hint">JWT-ready flow: this is a mocked login state only.</p>
+    <p v-if="auth.error" class="session-panel__error">{{ auth.error }}</p>
   </div>
 </template>
 
@@ -84,7 +105,7 @@ const login = () => {
   flex-wrap: wrap;
 }
 
-select {
+input {
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.15);
   padding: 0.4rem 0.8rem;
@@ -108,9 +129,9 @@ button.ghost {
   color: #0f172a;
 }
 
-.session-panel__hint {
+.session-panel__error {
   margin: 0;
   font-size: 0.75rem;
-  color: rgba(15, 23, 42, 0.55);
+  color: #b91c1c;
 }
 </style>

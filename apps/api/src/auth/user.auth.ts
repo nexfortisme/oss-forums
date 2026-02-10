@@ -1,9 +1,8 @@
 import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { pbkdf2Sync, randomBytes } from "node:crypto";
-// @ts-ignore - oss-forums.db will be resolved at runtime
-import db from './oss-forums.db' with {type: 'sqlite'};
-import { decode, sign, verify } from 'hono/jwt'
+import { db } from "../persistance/database";
+import { sign, verify } from 'hono/jwt'
 
 const iterations = 100000; // Number of iterations (adjust for desired security and performance)
 const keyLength = 64; // Length of the resulting key
@@ -15,18 +14,9 @@ export const register = async (c: Context) => {
     const requestBody = await c.req.json();
 
     const username = requestBody.username;
-    const email = requestBody.email;
     const password = requestBody.password;
 
-    // if(password.length < PASSWORD_MIN_LENGTH) {
-    //     return c.text("Your password must be at least 8 characters long. If you wish to use a short password, you accept the risk of your account being compromised. This is your only warning.", 401);
-    // }
-
-    // if(BAD_PASSWORD_LIST.includes(password)) {
-    //     return c.text("Your password is too common. Please choose a more secure password. If you with to use a bad password, you accept the risk of your account being compromised. This is your only warning.", 401);
-    // }
-
-    const user = db.query("SELECT * FROM users WHERE email = ? OR username = ?", [email, username]);
+    const user = db.query("SELECT * FROM users WHERE username = ?").all(username);
     if (user.length > 0) {
         console.log('User already exists with that email or username', user);
         return c.text("User already exists with that email or username", 401);
@@ -36,11 +26,10 @@ export const register = async (c: Context) => {
     const hashedPassword = pbkdf2Sync(password, salt, iterations, keyLength, digest).toString("hex");
     const userId = Bun.randomUUIDv7();
 
-    const query = db.prepareQuery("INSERT INTO users (id, username, email, password, salt) VALUES (?, ?, ?, ?, ?)");
-    query.all([userId, username, email, hashedPassword, salt]);
+    db.query("INSERT INTO users (id, username, display_name, role, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(userId, username, username, 'member', hashedPassword, salt, new Date().toISOString());
 
-    const newUser = db.query("SELECT * FROM users WHERE id = ?", [userId]);
-    if(user.length === 0) {
+    const newUser = db.query("SELECT * FROM users WHERE id = ?").all(userId);
+    if (newUser.length === 0) {
         return c.text("Error Creating User ", 404);
     }
 
@@ -55,22 +44,22 @@ export const login = async (c: Context) => {
 
     console.log('Login Request Body', requestBody);
 
-    const email = requestBody.email;
+    const username = requestBody.username;
     const password = requestBody.password;
 
     // Checking to see if the user exists
-    const user = db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const user = db.query("SELECT * FROM users WHERE username = ?").all(username);
     if (user.length === 0) {
         console.log('User does not exist');
         return c.text("User does not exist", 401);
     }
 
-    console.log('user', user.fromRow(user[0]));
-    let userObj = user.fromRow(user[0]);
+    const userObj = user[0] as { id: string; username: string; display_name: string; role: string; password_hash: string; password_salt: string; created_at: string };
+    console.log('user', userObj);
 
     // // Checking to see if the password is correct
-    const hashedPassword = pbkdf2Sync(password, userObj.salt, iterations, keyLength, digest).toString("hex");
-    if (userObj.password !== hashedPassword) {
+    const hashedPassword = pbkdf2Sync(password, userObj.password_salt, iterations, keyLength, digest).toString("hex");
+    if (userObj.password_hash !== hashedPassword) {
         console.log('Password is incorrect');
         return c.text("Password is incorrect", 401);
     }
@@ -81,7 +70,9 @@ export const login = async (c: Context) => {
         user: JSON.stringify({
             id: userObj.id,
             username: userObj.username,
-            email: userObj.email
+            display_name: userObj.display_name,
+            role: userObj.role,
+            created_at: userObj.created_at
         })
     }
 
