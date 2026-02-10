@@ -57,7 +57,7 @@ const handlePostSubmit = (body: string) => {
         <NewPostForm
           :channel-name="channel.name"
           :can-post="auth.canPost"
-          :user-label="auth.currentUser?.name || 'Guest'"
+          :user-label="auth.currentUser?.username || 'Guest'"
           @submit="handlePostSubmit"
         />
 

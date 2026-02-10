@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { login, logout, me, register, validate } from "./auth/user.auth";
 import { initDatabase } from "./persistance/database";
+import { getUserById } from "./data/user.data";
+import { jwt } from "hono/jwt";
 
 initDatabase();
 
@@ -21,6 +23,24 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use("/users/:id", jwt({
+  secret: Bun.env.JWT_SECRET as string,
+  alg: 'HS256',
+}));
+
+app.get("/users/:id", async (c) => {
+  const userId = c.req.param("id");
+  let user = await getUserById(userId);
+  if (!user) {
+    return c.json({ error: "User not found" }, 404);
+  }
+
+  user.password_hash = undefined;
+  user.password_salt = undefined;
+
+  return c.json(user);
+});
 
 app.get("/health", (c) => c.json({ ok: true }));
 app.post("/auth/register", register);

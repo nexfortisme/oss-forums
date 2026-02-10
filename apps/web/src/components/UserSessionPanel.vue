@@ -11,7 +11,7 @@ const form = reactive({
   password: '',
 })
 
-const currentLabel = computed(() => auth.currentUser?.name ?? 'Signed out')
+const currentLabel = computed(() => auth.currentUser?.username ?? 'Signed out')
 const roleLabel = computed(() => auth.currentUser?.role.toUpperCase() ?? 'Viewer')
 const isBusy = computed(() => auth.status === 'loading')
 

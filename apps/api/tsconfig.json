@@ -7,5 +7,14 @@
     "skipLibCheck": true,
     "types": ["bun"]
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "../shared/interfaces/admin-queue.interface.ts",
+    "../shared/interfaces/channel.interface.ts",
+    "../shared/interfaces/comments.interface.ts",
+    "../shared/interfaces/event.interface.ts",
+    "../shared/interfaces/post.interface.ts",
+    "../shared/interfaces/profile.interface.ts",
+    "../shared/interfaces/user.interface.ts"
+  ]
 }

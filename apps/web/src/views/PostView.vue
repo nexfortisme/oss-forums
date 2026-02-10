@@ -72,7 +72,7 @@ const handleRemovePost = () => {
           “{{ moderation.reason }}”
         </p>
         <p v-if="moderator" class="post-view__removed-meta">
-          Action by {{ moderator.name }} · {{ formatDate(moderation?.createdAt ?? '') }}
+          Action by {{ moderator.username }} · {{ formatDate(moderation?.createdAt ?? '') }}
         </p>
       </div>
       <div v-if="auth.canModerate" class="post-view__admin-toggle">

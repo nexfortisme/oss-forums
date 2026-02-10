@@ -195,7 +195,7 @@ export const useForumStore = defineStore('forum', () => {
       channelId,
       title: deriveTitle(trimmed),
       body: trimmed,
-      author: auth.currentUser?.name ?? 'Guest',
+      author: auth.currentUser?.username ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
@@ -211,7 +211,7 @@ export const useForumStore = defineStore('forum', () => {
       postId,
       parentId,
       body: trimmed,
-      author: auth.currentUser?.name ?? 'Guest',
+      author: auth.currentUser?.username ?? 'Guest',
       createdAt: new Date().toISOString(),
     }
 
