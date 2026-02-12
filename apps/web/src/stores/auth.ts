@@ -6,9 +6,11 @@ import { computed, ref } from 'vue'
 
 type AuthStatus = 'idle' | 'loading' | 'error'
 
-const apiBaseUrl = import.meta.env.API_BASE_URL ?? 'http://localhost:3000'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
 const excludedDomains =
   import.meta.env.VITE_EXCLUDED_DOMAINS?.split(',').map((domain: string) => domain.trim()) ?? []
+
+console.log('apiBaseUrl', apiBaseUrl)
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<User | null>(null)

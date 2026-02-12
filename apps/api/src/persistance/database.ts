@@ -35,10 +35,11 @@ export function initDatabase() {
   db.query(`
     CREATE TABLE IF NOT EXISTS channels (
       id TEXT PRIMARY KEY,
-      slug TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       description TEXT NOT NULL,
       accent TEXT NOT NULL,
+      deleted BOOLEAN DEFAULT FALSE,
+      deleted_at TIMESTAMP DEFAULT NULL,
       guidelines TEXT NOT NULL DEFAULT '[]'
     )
   `).run();
@@ -50,11 +51,13 @@ export function initDatabase() {
       author_id TEXT NOT NULL,
       title TEXT,
       body TEXT NOT NULL,
+      deleted BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      moderation_status TEXT,
-      moderation_reason TEXT,
-      moderated_by TEXT,
-      moderated_at TIMESTAMP,
+      deleted_at TIMESTAMP DEFAULT NULL,
+      moderation_status TEXT DEFAULT NULL,
+      moderation_reason TEXT DEFAULT NULL,
+      moderated_by TEXT DEFAULT NULL,
+      moderated_at TIMESTAMP DEFAULT NULL,
       FOREIGN KEY (channel_id) REFERENCES channels(id),
       FOREIGN KEY (author_id) REFERENCES users(id),
       FOREIGN KEY (moderated_by) REFERENCES users(id)

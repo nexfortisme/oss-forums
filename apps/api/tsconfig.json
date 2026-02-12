@@ -10,7 +10,7 @@
   "include": [
     "src/**/*.ts",
     "../shared/interfaces/admin-queue.interface.ts",
-    "../shared/interfaces/channel.interface.ts",
+    "../shared/interfaces/channels.interface.ts",
     "../shared/interfaces/comments.interface.ts",
     "../shared/interfaces/event.interface.ts",
     "../shared/interfaces/post.interface.ts",
