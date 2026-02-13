@@ -4,8 +4,12 @@ export interface Channel {
   id: string;
   name: string;
   description: string;
-  accent: string;
+  accent?: string;
+  deleted?: boolean;
+  deleted_at?: string;
   guidelines: string[];
+
+  errors?: string;
 }
 
 

@@ -35,9 +35,9 @@ export function initDatabase() {
   db.query(`
     CREATE TABLE IF NOT EXISTS channels (
       id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
+      name TEXT UNIQUE NOT NULL,
       description TEXT NOT NULL,
-      accent TEXT NOT NULL,
+      accent TEXT DEFAULT NULL,
       deleted BOOLEAN DEFAULT FALSE,
       deleted_at TIMESTAMP DEFAULT NULL,
       guidelines TEXT NOT NULL DEFAULT '[]'

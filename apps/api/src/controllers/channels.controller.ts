@@ -30,9 +30,9 @@ channelsController.get('/', async (c) => {
 })
 
 // -------- Get Channel By ID -- No Auth Required --------
-channelsController.get('/:id', async (c) => {
-  const channelId = c.req.param('id')
-  const channel = await getChannelInformation(channelId)
+channelsController.get('/:name', async (c) => {
+  const channelName = c.req.param('name')
+  const channel = await getChannelInformation(channelName)
   if (!channel) {
     return c.json({ error: 'Channel not found' }, 404)
   }

@@ -1,4 +1,7 @@
-import type { JwtTokenResponse } from '@shared/interfaces/jwt-token-response.interface'
+import type {
+  JwtTokenResponse,
+  LoginResponse,
+} from '@shared/interfaces/jwt-token-response.interface'
 import type { User } from '@shared/interfaces/user.interface'
 import { Role } from '@shared/interfaces/user.interface'
 import { defineStore } from 'pinia'
@@ -49,9 +52,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const refreshSession = async () => {
+    const authToken = sessionStorage.getItem('auth_token')
+    if (!authToken) {
+      currentUser.value = null
+      return false
+    }
+
     try {
       const response = await fetch(`${apiBaseUrl}/auth/me`, {
-        credentials: 'include',
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
       })
 
       console.log('response', response)
@@ -70,7 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
       setSession(JSON.parse(data.user as unknown as string) as User)
       return Boolean(currentUser.value)
     } catch (err) {
-      console.log('error', err)
+      console.error('Error refreshing session', err)
       currentUser.value = null
       // error.value = err instanceof Error ? err.message : 'Failed to load session.'
 
@@ -109,6 +122,12 @@ export const useAuthStore = defineStore('auth', () => {
         status.value = 'error'
         return false
       }
+
+      console.log('Login successful', response)
+
+      const data = (await response.json()) as LoginResponse
+
+      sessionStorage.setItem('auth_token', data.token)
 
       await refreshSession()
       status.value = 'idle'

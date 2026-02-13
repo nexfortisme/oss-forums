@@ -44,8 +44,6 @@ export const register = async (c: Context) => {
 export const login = async (c: Context) => {
   const requestBody = await c.req.json()
 
-  console.log('Login Request Body', requestBody)
-
   const username = requestBody.username
   const password = requestBody.password
 
@@ -65,7 +63,6 @@ export const login = async (c: Context) => {
     password_salt: string
     created_at: string
   }
-  console.log('user', userObj)
 
   // // Checking to see if the password is correct
   const hashedPassword = pbkdf2Sync(
@@ -86,24 +83,27 @@ export const login = async (c: Context) => {
     user: JSON.stringify({
       id: userObj.id,
       username: userObj.username,
-      display_name: userObj.display_name,
       role: userObj.role,
-      created_at: userObj.created_at,
     }),
   }
 
   // Creating the JWT
   const userJWT = await sign(payload, Bun.env.JWT_SECRET as string, 'HS256')
 
+  // TODO - Figure this out at some point
   setCookie(c, 'auth_token', userJWT, {
     httpOnly: true,
     secure: true,
     sameSite: 'Strict',
-    maxAge: 60 * 60,
+    maxAge: 60 * 60, // 1 hour
     path: '/',
   })
 
-  return c.text('Login successful')
+  return c.json({
+    message: 'Login successful',
+    userId: userObj.id,
+    token: userJWT,
+  })
 }
 
 export const logout = (c: Context) => {
@@ -131,8 +131,9 @@ export const validate = async (c: Context) => {
 
 // TODO - Update this with a DB call to return the user object, minus the password, salt and stuff like that
 export const me = async (c: any) => {
-  const token = getCookie(c, 'auth_token')
+  const token = getCookie(c, 'auth_token') || (c.req.header('Authorization') as string).split(' ')[1]
   if (!token) {
+    console.log('No token provided')
     return c.text('No token provided', 401)
   }
   const decoded = await verify(token, Bun.env.JWT_SECRET as string, 'HS256')

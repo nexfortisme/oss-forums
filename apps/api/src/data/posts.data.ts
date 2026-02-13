@@ -1,6 +1,7 @@
 import { PostComments } from '../../../shared/interfaces/comments.interface'
 import { Post, PostResponseObject } from '../../../shared/interfaces/post.interface'
 import { db } from '../persistance/database'
+import { getChannelByName } from './channels.data'
 import { getPostComments } from './comments.data'
 
 // Create
@@ -17,10 +18,14 @@ export const createPost = async (post: Post) => {
 }
 
 // Get All For Channel
-export const getAllPostsForChannel = async (channelId: string) => {
+export const getAllPostsForChannel = async (channelName: string) => {
+  const channel = await getChannelByName(channelName)
+  if (!channel) {
+    return null
+  }
   const posts = await db
     .query('SELECT * FROM posts WHERE channel_id = ? AND deleted = FALSE ORDER BY created_at DESC')
-    .all(channelId)
+    .all(channel.id)
   return posts
 }
 
