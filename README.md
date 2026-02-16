@@ -2,6 +2,10 @@
 
 Monorepo with a Vue + Vite frontend and a Hono + Bun backend.
 
+## Demo Site
+
+See an example of the app deployed [HERE](https://oss-forums.nexfortisme.com/channels)
+
 ## Layout
 
 - `apps/web`: Vite + Vue app
