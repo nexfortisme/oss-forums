@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Context, Hono, Next } from 'hono'
 import { jwt, verify } from 'hono/jwt'
 import { Channel } from '../../../shared/interfaces/channels.interface'
 import { Role, User } from '../../../shared/interfaces/user.interface'
@@ -11,8 +11,17 @@ import {
 } from '../data/channels.data'
 import { getUserById } from '../data/user.data'
 import { adminMiddleware } from './middleware/admin.middleware'
+import { validate } from '../auth/user.auth'
 
 const channelsController = new Hono()
+
+channelsController.use('/test', async (c, next) => {
+  return await validate(c, next)
+})
+
+channelsController.get('/test', async (c) => {
+  return c.text('Test successful')
+})
 
 // -- Routes --
 /*

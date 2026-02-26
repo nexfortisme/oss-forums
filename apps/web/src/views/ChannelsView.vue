@@ -18,6 +18,17 @@ const handleCreateChannel = (payload: {
 }) => {
   store.addChannel(payload)
 }
+
+const test = async () => {
+  fetch('http://localhost:3000/channels/test', {
+    method: 'GET',
+    credentials: 'include',
+  })
+    // .then((response) => response.json())
+    .then((data) => {
+      console.log('data', data)
+    })
+}
 </script>
 
 <template>
@@ -52,6 +63,8 @@ const handleCreateChannel = (payload: {
     </div>
     <ChannelList :channels="channels" />
   </section>
+
+  <button @click="test">Test</button>
 </template>
 
 <style scoped>

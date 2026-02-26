@@ -1,4 +1,4 @@
-import { Context } from 'hono'
+import { Context, Next } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { pbkdf2Sync, randomBytes } from 'node:crypto'
 import { db } from '../persistance/database'
@@ -111,19 +111,49 @@ export const logout = (c: Context) => {
   return c.text('Logout successful')
 }
 
-export const validate = async (c: Context) => {
-  const token = getCookie(c, 'auth_token')
+export const validate = async (c: Context, next: Next) => {
+  let token = getCookie(c, 'auth_token')
+
+  // token += 'breaking_string'
 
   if (!token) {
     return c.text('No token provided', 401)
   }
 
   try {
-    const decoded = await verify(token, Bun.env.JWT_SECRET as string, 'HS256')
+    console.log('token', token)
+    console.log('Bun.env.JWT_SECRET', Bun.env.JWT_SECRET)
+    let decoded = await verify(token, Bun.env.JWT_SECRET as string, 'HS256')
 
-    console.log('Token is valid')
+    console.log('decoded', decoded)
 
-    return c.text('Token is valid', 200)
+    if (decoded.iss !== 'oss-forums') {
+      return c.text('Invalid Login', 401)
+    }
+
+    let expDate = decoded.exp ?? 0
+
+    console.log('expDate', expDate)
+
+    expDate = expDate * 60 * 60 * 60 * 60 * 60
+
+    console.log('expDate', expDate)
+
+    console.log('Date.now() / 1000', Date.now() / 1000)
+
+    console.log('expDate < Date.now() / 1000', expDate < Date.now() / 1000)
+
+    if (expDate < Date.now() / 1000) {
+      return c.text('Invalid Login', 401)
+    }
+
+    if (!decoded.user) {
+      return c.text('Invalid Login', 401)
+    }
+
+    console.log('Token is valid', decoded)
+
+    return next()
   } catch (_error) {
     return c.text('Invalid token', 401)
   }
@@ -131,7 +161,8 @@ export const validate = async (c: Context) => {
 
 // TODO - Update this with a DB call to return the user object, minus the password, salt and stuff like that
 export const me = async (c: any) => {
-  const token = getCookie(c, 'auth_token') || (c.req.header('Authorization') as string).split(' ')[1]
+  const token =
+    getCookie(c, 'auth_token') || (c.req.header('Authorization') as string).split(' ')[1]
   if (!token) {
     console.log('No token provided')
     return c.text('No token provided', 401)
