@@ -5,9 +5,11 @@ import authController from './controllers/auth.controller'
 import channelsController from './controllers/channels.controller'
 import postsController from './controllers/posts.controller'
 import userController from './controllers/user.controller'
+import { ensureInitialAdminUser } from './bootstrap/admin.bootstrap'
 import { initDatabase } from './persistance/database'
 
 initDatabase()
+await ensureInitialAdminUser()
 
 const app = new Hono()
 

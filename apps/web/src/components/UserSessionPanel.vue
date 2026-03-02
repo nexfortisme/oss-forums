@@ -1,31 +1,115 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
-const router = useRouter()
 
 const form = reactive({
-  username: '',
-  password: '',
+  exportPassphrase: '',
+  importPassphrase: '',
+  privateKeyFileContents: '',
+  privateKeyFileName: '',
+  privateKeyFileRequiresPassphrase: false,
 })
 
-const currentLabel = computed(() => auth.currentUser?.username ?? 'Signed out')
-const roleLabel = computed(() => auth.currentUser?.role.toUpperCase() ?? 'Viewer')
+const ui = reactive({
+  showExportForm: false,
+  showImportForm: false,
+  exportError: '',
+  importError: '',
+})
+
+const currentLabel = computed(() => auth.currentUser?.username ?? 'Provisioning...')
+const roleLabel = computed(() => auth.currentUser?.role.toUpperCase() ?? 'VIEWER')
 const isBusy = computed(() => auth.status === 'loading')
 
-const submitLogin = async () => {
-  if (!form.username || !form.password) return
-  const success = await auth.login(form.username, form.password)
+const clearImportForm = () => {
+  form.privateKeyFileContents = ''
+  form.privateKeyFileName = ''
+  form.privateKeyFileRequiresPassphrase = false
+  form.importPassphrase = ''
+  ui.importError = ''
+}
+
+const startDownloadFlow = () => {
+  ui.exportError = ''
+  ui.showExportForm = true
+}
+
+const cancelDownloadFlow = () => {
+  ui.exportError = ''
+  form.exportPassphrase = ''
+  ui.showExportForm = false
+}
+
+const submitDownloadPrivateKey = async () => {
+  ui.exportError = ''
+
+  if (!form.exportPassphrase.trim()) {
+    ui.exportError = 'Enter a passphrase before downloading the encrypted key file.'
+    return
+  }
+
+  const success = await auth.downloadPrivateKey(form.exportPassphrase)
   if (success) {
-    form.username = ''
-    form.password = ''
+    cancelDownloadFlow()
   }
 }
 
-const goToRegister = () => {
-  router.push({ name: 'register' })
+const toggleRestoreFlow = () => {
+  ui.importError = ''
+  ui.showImportForm = !ui.showImportForm
+
+  if (!ui.showImportForm) {
+    clearImportForm()
+  }
+}
+
+const submitPrivateKey = async () => {
+  ui.importError = ''
+
+  if (!form.privateKeyFileContents) {
+    ui.importError = 'Choose a private key file to restore your session.'
+    return
+  }
+
+  if (form.privateKeyFileRequiresPassphrase && !form.importPassphrase.trim()) {
+    ui.importError = 'Passphrase is required for this encrypted key file.'
+    return
+  }
+
+  const success = await auth.reauthenticateWithPrivateKey(
+    form.privateKeyFileContents,
+    form.importPassphrase,
+  )
+
+  if (success) {
+    clearImportForm()
+    ui.showImportForm = false
+  }
+}
+
+const usePrivateKeyFile = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) {
+    return
+  }
+
+  const fileContents = await file.text()
+  form.privateKeyFileContents = fileContents
+  form.privateKeyFileName = file.name
+  form.privateKeyFileRequiresPassphrase = false
+
+  try {
+    const parsed = JSON.parse(fileContents) as { encrypted?: unknown }
+    form.privateKeyFileRequiresPassphrase = parsed?.encrypted === true
+  } catch {
+    form.privateKeyFileRequiresPassphrase = false
+  }
+
+  ui.importError = ''
+  input.value = ''
 }
 </script>
 
@@ -36,31 +120,79 @@ const goToRegister = () => {
       <span class="session-panel__name">{{ currentLabel }}</span>
       <span class="session-panel__role">{{ roleLabel }}</span>
     </div>
+
     <div class="session-panel__actions">
       <template v-if="auth.isAuthenticated">
-        <button type="button" class="ghost" :disabled="isBusy" @click="auth.logout">Log out</button>
+        <button
+          v-if="!ui.showExportForm"
+          type="button"
+          :disabled="isBusy"
+          @click="startDownloadFlow"
+        >
+          Download encrypted private key
+        </button>
+        <div v-else class="session-panel__inline-form">
+          <input
+            v-model="form.exportPassphrase"
+            type="password"
+            placeholder="Passphrase for encrypted key export"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" :disabled="isBusy" @click="submitDownloadPrivateKey">
+            Download key file
+          </button>
+          <button type="button" class="ghost" :disabled="isBusy" @click="cancelDownloadFlow">
+            Cancel
+          </button>
+        </div>
       </template>
       <template v-else>
-        <input
-          v-model.trim="form.username"
-          type="text"
-          placeholder="Username"
-          autocomplete="username"
-        />
-        <input
-          v-model="form.password"
-          type="password"
-          placeholder="Password"
-          autocomplete="current-password"
-          @keyup.enter="submitLogin"
-        />
-        <button type="button" :disabled="isBusy" @click="submitLogin">Log in</button>
-        <button type="button" class="ghost" :disabled="isBusy" @click="goToRegister">
-          Register
-        </button>
+        <span class="session-panel__hint">A member account is provisioned automatically on entry.</span>
       </template>
     </div>
-    <p v-if="auth.error" class="session-panel__error">{{ auth.error }}</p>
+
+    <div class="session-panel__restore">
+      <button type="button" class="ghost" :disabled="isBusy" @click="toggleRestoreFlow">
+        {{ ui.showImportForm ? 'Cancel restore' : 'Restore from key file' }}
+      </button>
+
+      <div v-if="ui.showImportForm" class="session-panel__inline-form">
+        <label class="file-picker">
+          <span>{{ form.privateKeyFileName ? 'Choose another key file' : 'Choose key file' }}</span>
+          <input type="file" accept=".json,.txt" :disabled="isBusy" @change="usePrivateKeyFile" />
+        </label>
+        <span v-if="form.privateKeyFileName" class="session-panel__file-name">
+          {{ form.privateKeyFileName }}
+        </span>
+        <input
+          v-model="form.importPassphrase"
+          type="password"
+          :placeholder="
+            form.privateKeyFileRequiresPassphrase
+              ? 'Passphrase (required for encrypted key files)'
+              : 'Passphrase (only needed for encrypted key files)'
+          "
+          autocomplete="current-password"
+        />
+        <button
+          type="button"
+          class="ghost"
+          :disabled="
+            isBusy ||
+            !form.privateKeyFileContents ||
+            (form.privateKeyFileRequiresPassphrase && !form.importPassphrase.trim())
+          "
+          @click="submitPrivateKey"
+        >
+          Restore session
+        </button>
+      </div>
+    </div>
+
+    <p v-if="ui.exportError || ui.importError || auth.error" class="session-panel__error">
+      {{ ui.exportError || ui.importError || auth.error }}
+    </p>
   </div>
 </template>
 
@@ -99,23 +231,47 @@ const goToRegister = () => {
   color: #f8f6ee;
 }
 
-.session-panel__actions {
+.session-panel__actions,
+.session-panel__restore {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-input {
+.session-panel__inline-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.session-panel__file-name {
+  font-size: 0.75rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.session-panel__hint {
+  font-size: 0.8rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+input,
+button,
+.file-picker {
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  padding: 0.4rem 0.8rem;
-  background: #ffffff;
   font-size: 0.85rem;
 }
 
-button {
+input {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  padding: 0.4rem 0.8rem;
+  background: #ffffff;
+}
+
+button,
+.file-picker {
   border: none;
-  border-radius: 999px;
   padding: 0.4rem 0.9rem;
   background: #0f172a;
   color: #f8f6ee;
@@ -127,6 +283,24 @@ button.ghost {
   background: transparent;
   border: 1px solid rgba(15, 23, 42, 0.2);
   color: #0f172a;
+}
+
+.file-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: transparent;
+  color: #0f172a;
+}
+
+.file-picker input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }
 
 .session-panel__error {

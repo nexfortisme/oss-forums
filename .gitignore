@@ -43,3 +43,6 @@ __screenshots__/
 
 # SQLite
 *.sqlite
+
+# Bootstrap secrets
+apps/api/bootstrap-secrets/

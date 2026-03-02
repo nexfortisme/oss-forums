@@ -21,6 +21,31 @@ export function initDatabase() {
   `).run();
 
   db.query(`
+    CREATE TABLE IF NOT EXISTS device_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      device_id TEXT NOT NULL,
+      session_fingerprint TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (device_id, session_fingerprint),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `).run();
+
+  db.query(`
+    CREATE TABLE IF NOT EXISTS user_private_keys (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      key_hash TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      revoked_at TIMESTAMP DEFAULT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `).run();
+
+  db.query(`
     CREATE TABLE IF NOT EXISTS profiles (
       user_id TEXT PRIMARY KEY,
       bio TEXT,
