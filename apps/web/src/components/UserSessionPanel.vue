@@ -17,11 +17,13 @@ const ui = reactive({
   showImportForm: false,
   exportError: '',
   importError: '',
+  showActionsMenu: false,
 })
 
 const currentLabel = computed(() => auth.currentUser?.username ?? 'Provisioning...')
 const roleLabel = computed(() => auth.currentUser?.role.toUpperCase() ?? 'VIEWER')
 const isBusy = computed(() => auth.status === 'loading')
+const canToggleMenu = computed(() => !ui.showExportForm && !ui.showImportForm)
 
 const clearImportForm = () => {
   form.privateKeyFileContents = ''
@@ -33,6 +35,7 @@ const clearImportForm = () => {
 
 const startDownloadFlow = () => {
   ui.exportError = ''
+  ui.showActionsMenu = false
   ui.showExportForm = true
 }
 
@@ -59,9 +62,27 @@ const submitDownloadPrivateKey = async () => {
 const toggleRestoreFlow = () => {
   ui.importError = ''
   ui.showImportForm = !ui.showImportForm
+  ui.showActionsMenu = false
 
   if (!ui.showImportForm) {
     clearImportForm()
+  }
+}
+
+const toggleActionsMenu = () => {
+  if (!canToggleMenu.value) return
+  ui.showActionsMenu = !ui.showActionsMenu
+}
+
+const selectAction = (action: 'download' | 'restore') => {
+  if (action === 'download') {
+    startDownloadFlow()
+  } else if (action === 'restore') {
+    if (!ui.showImportForm) {
+      toggleRestoreFlow()
+    } else {
+      ui.showActionsMenu = false
+    }
   }
 }
 
@@ -115,23 +136,21 @@ const usePrivateKeyFile = async (event: Event) => {
 
 <template>
   <div class="session-panel">
-    <div class="session-panel__identity">
+    <div class="session-panel__identity" @click="toggleActionsMenu">
       <span class="session-panel__label">Session</span>
       <span class="session-panel__name">{{ currentLabel }}</span>
-      <span class="session-panel__role">{{ roleLabel }}</span>
+      <span class="session-panel__role">
+        {{ roleLabel }}
+        <span class="session-panel__caret">▾</span>
+      </span>
     </div>
 
-    <div class="session-panel__actions">
+    <div
+      v-if="(auth.isAuthenticated && ui.showExportForm) || !auth.isAuthenticated"
+      class="session-panel__actions"
+    >
       <template v-if="auth.isAuthenticated">
-        <button
-          v-if="!ui.showExportForm"
-          type="button"
-          :disabled="isBusy"
-          @click="startDownloadFlow"
-        >
-          Download encrypted private key
-        </button>
-        <div v-else class="session-panel__inline-form">
+        <div class="session-panel__inline-form">
           <input
             v-model="form.exportPassphrase"
             type="password"
@@ -148,16 +167,25 @@ const usePrivateKeyFile = async (event: Event) => {
         </div>
       </template>
       <template v-else>
-        <span class="session-panel__hint">A member account is provisioned automatically on entry.</span>
+        <span class="session-panel__hint"
+          >A member account is provisioned automatically on entry.</span
+        >
       </template>
     </div>
 
-    <div class="session-panel__restore">
-      <button type="button" class="ghost" :disabled="isBusy" @click="toggleRestoreFlow">
-        {{ ui.showImportForm ? 'Cancel restore' : 'Restore from key file' }}
-      </button>
+    <div v-if="ui.showActionsMenu" class="session-panel__menu">
+      <div class="session-panel__menu-list">
+        <button type="button" class="session-panel__menu-item" @click="selectAction('download')">
+          Download encrypted private key
+        </button>
+        <button type="button" class="session-panel__menu-item" @click="selectAction('restore')">
+          Restore from key file
+        </button>
+      </div>
+    </div>
 
-      <div v-if="ui.showImportForm" class="session-panel__inline-form">
+    <div v-if="ui.showImportForm" class="session-panel__restore">
+      <div class="session-panel__inline-form">
         <label class="file-picker">
           <span>{{ form.privateKeyFileName ? 'Choose another key file' : 'Choose key file' }}</span>
           <input type="file" accept=".json,.txt" :disabled="isBusy" @change="usePrivateKeyFile" />
@@ -187,6 +215,9 @@ const usePrivateKeyFile = async (event: Event) => {
         >
           Restore session
         </button>
+        <button type="button" class="ghost" :disabled="isBusy" @click="toggleRestoreFlow">
+          Cancel
+        </button>
       </div>
     </div>
 
@@ -199,10 +230,11 @@ const usePrivateKeyFile = async (event: Event) => {
 <style scoped>
 .session-panel {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.4rem;
   background: rgba(15, 23, 42, 0.06);
-  padding: 0.75rem 1rem;
+  padding: 0.45rem 0.9rem 0.3rem;
   border-radius: 1rem;
+  position: relative;
 }
 
 .session-panel__identity {
@@ -210,6 +242,7 @@ const usePrivateKeyFile = async (event: Event) => {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  cursor: pointer;
 }
 
 .session-panel__label {
@@ -229,6 +262,13 @@ const usePrivateKeyFile = async (event: Event) => {
   border-radius: 999px;
   background: #0f172a;
   color: #f8f6ee;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.session-panel__caret {
+  font-size: 0.6rem;
 }
 
 .session-panel__actions,
@@ -237,6 +277,45 @@ const usePrivateKeyFile = async (event: Event) => {
   gap: 0.5rem;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.session-panel__menu {
+  position: absolute;
+  top: 100%;
+  right: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.session-panel__menu-list {
+  position: relative;
+  padding: 0.35rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  z-index: 20;
+}
+
+.session-panel__menu-item {
+  background: transparent;
+  border-radius: 0.6rem;
+  text-align: left;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  color: #0f172a;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.session-panel__menu-item + .session-panel__menu-item {
+  margin-top: 0.15rem;
+}
+
+.session-panel__menu-item:hover {
+  background: rgba(15, 23, 42, 0.05);
 }
 
 .session-panel__inline-form {

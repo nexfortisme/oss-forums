@@ -95,8 +95,16 @@ const auth = useAuthStore();
 
 @media (max-width: 960px) {
   .app-header__inner {
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: flex-start;
+  }
+
+  .app-header__brand {
+    flex: 1 1 auto;
+  }
+
+  :deep(.session-panel) {
+    margin-left: auto;
   }
 }
 </style>
