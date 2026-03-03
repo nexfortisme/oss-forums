@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import CommentComposer from '../components/CommentComposer.vue'
 import CommentThread from '../components/CommentThread.vue'
 import { formatDate } from '../lib/format'
@@ -9,6 +9,13 @@ import { useForumStore } from '../stores/forum'
 const props = defineProps<{ channelSlug: string; postId: string }>()
 const store = useForumStore()
 const auth = useAuthStore()
+
+onMounted(async () => {
+  if (store.channels.length === 0) {
+    await store.loadChannels()
+  }
+  await store.loadPost(props.postId)
+})
 
 const channel = computed(() => store.getChannelBySlug(props.channelSlug))
 const post = computed(() => store.getPostById(props.postId))
