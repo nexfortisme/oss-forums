@@ -63,6 +63,16 @@ export const getPostInformation = async (postId: string) => {
   return responseObject
 }
 
+export const updatePost = async (postId: string, title: string, body: string): Promise<Post | null> => {
+  const result = await db
+    .query('UPDATE posts SET title = ?, body = ? WHERE id = ? AND deleted = FALSE')
+    .run(title, body, postId)
+  if (result.changes === 0) {
+    return null
+  }
+  return getPostById(postId)
+}
+
 export const deletePost = async (postId: string) => {
   const post = await db
     .query('UPDATE posts SET deleted = TRUE, deleted_at = CURRENT_TIMESTAMP WHERE id = ?')

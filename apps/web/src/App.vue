@@ -2,11 +2,14 @@
 import { onMounted } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import { useAuthStore } from './stores/auth'
+import { useForumStore } from './stores/forum'
 
 const auth = useAuthStore()
+const forum = useForumStore()
 
 onMounted(() => {
   auth.refreshSession()
+  forum.loadChannels()
 })
 </script>
 

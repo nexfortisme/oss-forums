@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useForumStore } from '../stores/forum'
 import NewPostForm from '../components/NewPostForm.vue'
@@ -13,6 +13,9 @@ const channel = computed(() => store.getChannelBySlug(props.channelSlug))
 const posts = computed(() =>
   channel.value ? store.getPostsByChannelId(channel.value.id) : [],
 )
+
+onMounted(() => store.loadChannelBySlug(props.channelSlug))
+watch(() => props.channelSlug, (slug) => store.loadChannelBySlug(slug))
 
 const replyCount = computed(() =>
   posts.value.reduce((total, post) => total + store.getCommentCountForPost(post.id), 0),

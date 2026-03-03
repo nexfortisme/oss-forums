@@ -4,12 +4,15 @@ import { logger } from 'hono/logger'
 import authController from './controllers/auth.controller'
 import channelsController from './controllers/channels.controller'
 import postsController from './controllers/posts.controller'
+import commentsController from './controllers/comments.controller'
 import userController from './controllers/user.controller'
 import { ensureInitialAdminUser } from './bootstrap/admin.bootstrap'
+import { seedDemoData } from './bootstrap/seed.bootstrap'
 import { initDatabase } from './persistance/database'
 
 initDatabase()
 await ensureInitialAdminUser()
+seedDemoData()
 
 const app = new Hono()
 
@@ -37,6 +40,7 @@ app.use('*', logger())
 app.route('/auth', authController)
 app.route('/channels', channelsController)
 app.route('/posts', postsController)
+app.route('/comments', commentsController)
 app.route('/users', userController)
 
 Bun.serve({
