@@ -2,7 +2,7 @@
 import UserSessionPanel from './UserSessionPanel.vue'
 import { useAuthStore } from '../stores/auth'
 
-const auth = useAuthStore();
+const auth = useAuthStore()
 </script>
 
 <template>
@@ -15,6 +15,12 @@ const auth = useAuthStore();
         </RouterLink>
         <nav class="app-header__nav">
           <RouterLink to="/channels" class="nav-link">Channels</RouterLink>
+        </nav>
+        <nav class="app-header__nav">
+          <RouterLink to="/about-us" class="nav-link">About Us</RouterLink>
+        </nav>
+        <nav class="app-header__nav">
+          <RouterLink to="/help" class="nav-link">Help</RouterLink>
         </nav>
       </div>
       <UserSessionPanel v-if="!auth.isExcludedDomain" />

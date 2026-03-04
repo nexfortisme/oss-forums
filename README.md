@@ -40,7 +40,6 @@ cd apps/web
 bun dev
 bun run build
 bun test:unit
-bun test:e2e:dev
 bun lint
 ```
 
