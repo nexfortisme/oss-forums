@@ -36,6 +36,7 @@ __screenshots__/
 
 # Environment variables
 .env
+.env.production
 
 # SQLite
 *.sqlite

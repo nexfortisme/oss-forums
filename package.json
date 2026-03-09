@@ -8,8 +8,8 @@
   "scripts": {
     "dev:web": "bun --env-file=../../.env --cwd apps/web dev",
     "dev:api": "bun --env-file=../../.env --cwd apps/api dev",
-    "build:web": "bun --cwd apps/web build",
-    "build:api": "bun --cwd apps/api build"
+    "build:web": "bun --env-file=../../.env.production --cwd apps/web build",
+    "build:api": "bun --env-file=../../.env.production --cwd apps/api build"
   },
   "devDependencies": {}
 }
