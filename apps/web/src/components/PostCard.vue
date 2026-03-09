@@ -5,6 +5,9 @@ import { formatDate } from '../lib/format'
 const props = defineProps<{ post: Post; channelSlug: string; commentCount: number }>()
 
 const title = props.post.title ?? props.post.body.split('\n')[0]
+
+const truncadedPostBody = props.post.body.length > 100 ? props.post.body.slice(0, 100) + '...' : props.post.body
+
 </script>
 
 <template>
@@ -17,7 +20,7 @@ const title = props.post.title ?? props.post.body.split('\n')[0]
       <h3>{{ title }}</h3>
       <span class="post-card__meta">{{ formatDate(post.createdAt) }}</span>
     </div>
-    <p class="post-card__body">{{ post.body }}</p>
+    <p class="post-card__body">{{ truncadedPostBody }}</p>
     <div class="post-card__footer">
       <span class="post-card__author">{{ post.author }}</span>
       <span class="post-card__comments">{{ commentCount }} comments</span>
