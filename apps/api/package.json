@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --env-file ../../.env --hot src/index.ts",
+    "build": "bun build src/index.ts --target bun --outfile dist/api --compile", 
     "start": "bun src/index.ts"
   },
   "dependencies": {
