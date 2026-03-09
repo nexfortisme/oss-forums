@@ -48,4 +48,4 @@ Bun.serve({
   port,
 })
 
-export default app
+export { app }
