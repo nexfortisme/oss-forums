@@ -3,14 +3,16 @@ import { ref } from 'vue'
 
 const props = defineProps<{ channelName: string; canPost: boolean; userLabel: string }>()
 
-const emit = defineEmits<{ submit: [body: string] }>()
+const emit = defineEmits<{ submit: [body: string, title: string] }>()
 
 const body = ref('')
+const title = ref('')
 
 const submitPost = () => {
   if (!props.canPost) return
-  emit('submit', body.value)
+  emit('submit', body.value, title.value)
   body.value = ''
+  title.value = ''
 }
 </script>
 
@@ -21,13 +23,14 @@ const submitPost = () => {
       <span class="new-post__note">Drafting in plain text for now.</span>
     </div>
     <div v-if="canPost" class="new-post__composer">
+      <input v-model="title" type="text" placeholder="Title" />
       <textarea
         v-model="body"
         rows="6"
         placeholder="Share an update, question, or announcement..."
       ></textarea>
       <div class="new-post__actions">
-        <button type="submit" :disabled="!body.trim()">Publish post</button>
+        <button type="submit" :disabled="!body.trim() || !title.trim()">Publish post</button>
       </div>
     </div>
     <div v-else class="new-post__locked">
@@ -79,6 +82,24 @@ textarea:focus {
   border-color: rgba(15, 23, 42, 0.4);
 }
 
+input {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 1rem;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.95rem;
+}
+
+input:focus {
+  outline: 2px solid rgba(15, 23, 42, 0.2);
+  border-color: rgba(15, 23, 42, 0.4);
+}
+
+input:disabled {
+  background: rgba(15, 23, 42, 0.05);
+  cursor: not-allowed;
+}
 .new-post__actions {
   display: flex;
   justify-content: flex-end;
@@ -99,7 +120,9 @@ button {
   color: #f8f6ee;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 button:disabled {

@@ -66,13 +66,6 @@ const adaptComment = (raw: any): Comment => {
 
 // ---------- Helpers ----------
 
-const deriveTitle = (body: string) => {
-  const trimmed = body.trim().replace(/\s+/g, ' ')
-  if (!trimmed) return 'Untitled post'
-  if (trimmed.length <= 60) return trimmed
-  return `${trimmed.slice(0, 60)}...`
-}
-
 const ensureUniqueSlug = (desired: string, existing: string[]) => {
   if (!existing.includes(desired)) return desired
   let suffix = 2
@@ -176,9 +169,10 @@ export const useForumStore = defineStore('forum', () => {
 
   // ---------- API: Mutations ----------
 
-  const addPost = async (channelId: string, body: string) => {
-    const trimmed = body.trim()
-    if (!trimmed || !auth.canPost) return
+  const addPost = async (channelId: string, body: string, title: string) => {
+    const trimmedBody = body.trim()
+    const trimmedTitle = title.trim()
+    if (!trimmedBody || !trimmedTitle || !auth.canPost) return
 
     try {
       const res = await fetch(`${apiBase}/posts`, {
@@ -189,8 +183,8 @@ export const useForumStore = defineStore('forum', () => {
         },
         body: JSON.stringify({
           channel_id: channelId,
-          title: deriveTitle(trimmed),
-          body: trimmed,
+          title: trimmedTitle,
+          body: trimmedBody,
         }),
       })
       if (!res.ok) return

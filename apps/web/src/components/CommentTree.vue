@@ -167,6 +167,8 @@ const forwardReply = (parentId: string, body: string) => {
   margin: 0;
   white-space: pre-wrap;
   color: rgba(15, 23, 42, 0.78);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .comment-item__removed {

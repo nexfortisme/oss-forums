@@ -29,9 +29,9 @@ const commentCounts = computed(() => {
   return counts
 })
 
-const handlePostSubmit = (body: string) => {
+const handlePostSubmit = (body: string, title: string) => {
   if (!channel.value) return
-  store.addPost(channel.value.id, body)
+  store.addPost(channel.value.id, body, title)
 }
 </script>
 
