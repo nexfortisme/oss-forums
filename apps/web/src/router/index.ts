@@ -3,6 +3,8 @@ import ChannelsView from '../views/ChannelsView.vue'
 import ChannelView from '../views/ChannelView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import PostView from '../views/PostView.vue'
+import AboutUsView from '../views/AboutUsView.vue'
+import HelpView from '../views/HelpView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +35,16 @@ const router = createRouter({
       name: 'not-found',
       component: NotFoundView,
     },
+    {
+      path: '/about-us',
+      name: 'about-us',
+      component: AboutUsView,
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: HelpView,
+    }
   ],
 })
 
