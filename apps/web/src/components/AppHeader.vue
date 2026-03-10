@@ -75,7 +75,7 @@ const auth = useAuthStore()
 }
 
 .brand__text {
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 1.25rem;
   letter-spacing: 0.02em;
 }

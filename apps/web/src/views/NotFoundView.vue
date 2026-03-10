@@ -30,7 +30,7 @@
 .not-found h1 {
   margin: 0;
   font-size: 2.2rem;
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .ghost-link {

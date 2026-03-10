@@ -123,7 +123,7 @@ const handlePostSubmit = (body: string, title: string) => {
 
 .channel-view__intro h1 {
   margin: 0.3rem 0 0.5rem;
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 2.2rem;
 }
 

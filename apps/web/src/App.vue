@@ -27,11 +27,10 @@ onMounted(() => {
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-
 :root {
   color-scheme: light;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  font-optical-sizing: auto;
   background-color: #f4efe5;
   color: #0f172a;
 }
