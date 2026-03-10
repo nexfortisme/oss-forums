@@ -64,7 +64,7 @@ textarea {
   border-radius: 0.9rem;
   border: 1px solid rgba(15, 23, 42, 0.12);
   padding: 0.85rem 1rem;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 0.95rem;
   resize: vertical;
 }

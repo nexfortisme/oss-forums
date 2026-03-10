@@ -100,7 +100,7 @@ const submit = async () => {
 header h1 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 header p {

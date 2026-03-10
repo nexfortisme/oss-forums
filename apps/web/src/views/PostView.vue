@@ -179,7 +179,7 @@ const handleRemovePost = () => {
 .post-view__title h1 {
   margin: 0 0 0.6rem;
   font-size: 2rem;
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .post-view__meta {

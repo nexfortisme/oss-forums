@@ -78,7 +78,7 @@ const handleCreateChannel = (payload: {
 .page-hero h1 {
   font-size: 2.6rem;
   margin: 0 0 1rem;
-  font-family: 'Fraunces', serif;
+  font-family: 'Noto Sans', sans-serif;
 }
 
 .subtitle {
